@@ -2,9 +2,10 @@
 
 #include "tbb/kirillov_m_strassen_alg/include/ops_tbb.hpp"
 
+#include <tbb/parallel_invoke.h>
+
 #include <cmath>
 #include <random>
-#include <tbb/parallel_invoke.h>
 using namespace kirillov_tbb;
 
 std::vector<double> kirillov_tbb::strassen(const std::vector<double>& A, const std::vector<double>& B, int n) {
@@ -38,14 +39,10 @@ std::vector<double> kirillov_tbb::strassen(const std::vector<double>& A, const s
   std::vector<double> p6;
   std::vector<double> p7;
   tbb::parallel_invoke(
-      [&] { p1 = strassen(add(A11, A22), add(B11, B22), half); },
-      [&] { p2 = strassen(add(A21, A22), B11, half); },
-      [&] { p3 = strassen(A11, sub(B12, B22), half); },
-      [&] { p4 = strassen(A22, sub(B21, B11), half); },
-      [&] { p5 = strassen(add(A11, A12), B22, half); },
-      [&] { p6 = strassen(sub(A21, A11), add(B11, B12), half); },
-      [&] { p7 = strassen(sub(A12, A22), add(B21, B22), half); }
-  );
+      [&] { p1 = strassen(add(A11, A22), add(B11, B22), half); }, [&] { p2 = strassen(add(A21, A22), B11, half); },
+      [&] { p3 = strassen(A11, sub(B12, B22), half); }, [&] { p4 = strassen(A22, sub(B21, B11), half); },
+      [&] { p5 = strassen(add(A11, A12), B22, half); }, [&] { p6 = strassen(sub(A21, A11), add(B11, B12), half); },
+      [&] { p7 = strassen(sub(A12, A22), add(B21, B22), half); });
   std::vector<double> C11 = add(add(p1, p4), sub(p7, p5));
   std::vector<double> C12 = add(p3, p5);
   std::vector<double> C21 = add(p2, p4);
